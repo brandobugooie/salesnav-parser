@@ -49,7 +49,9 @@
   <br>
   <button onclick="parseLeads()">Parse Leads</button>
 
-  <div id="output"></div>
+<div id="output"></div>
+<div id="tableContainer" style="overflow-x:auto; margin-top:20px;"></div>
+<div id="downloadBtn" style="margin-top:10px;"></div>
 
   <script>
   function parseLeads() {
@@ -132,8 +134,45 @@
     // Store results globally for CSV download later
     window.parsedLeads = results;
 
-    document.getElementById("output").innerHTML = "<p>✅ Parsed <strong>" + results.length + " leads</strong> successfully! Table coming in Stage 3.</p>";
+    document.getElementById("output").innerHTML = "<p>✅ Parsed <strong>" + results.length + " leads</strong> successfully!</p>";
+
+    // Build table
+    var headers = ["Name","Connection","Title","Company","Extra Companies","Location","Lists","CRM Status","Activity","Last Activity Date"];
+    var html = "<table style='border-collapse:collapse; width:100%; font-size:13px;'>";
+    html += "<tr>" + headers.map(function(h) {
+      return "<th style='background:#0a66c2;color:white;padding:8px 12px;text-align:left;white-space:nowrap;'>" + h + "</th>";
+    }).join("") + "</tr>";
+
+    results.forEach(function(r, idx) {
+      var bg = idx % 2 === 0 ? "#ffffff" : "#f0f4ff";
+      html += "<tr style='background:" + bg + ";'>";
+      html += ["name","connection","title","company","extras","location","lists","crmStatus","activity","date"].map(function(k) {
+        return "<td style='padding:8px 12px;border-bottom:1px solid #ddd;white-space:nowrap;'>" + (r[k] || "") + "</td>";
+      }).join("");
+      html += "</tr>";
+    });
+    html += "</table>";
+    document.getElementById("tableContainer").innerHTML = html;
+
+    // Build download button
+    document.getElementById("downloadBtn").innerHTML = "<button onclick='downloadCSV()' style='padding:10px 24px;background:#00a36c;color:white;border:none;border-radius:6px;font-size:16px;cursor:pointer;'>⬇️ Download CSV</button>";
   }
+function downloadCSV() {
+    var headers = ["Name","Connection","Title","Company","Extra Companies","Location","Lists","CRM Status","Activity","Last Activity Date"];
+    var keys = ["name","connection","title","company","extras","location","lists","crmStatus","activity","date"];
+    var csv = headers.join(",") + "\n";
+    window.parsedLeads.forEach(function(r) {
+      csv += keys.map(function(k) {
+        return '"' + (r[k] || "").replace(/"/g, '""') + '"';
+      }).join(",") + "\n";
+    });
+    var blob = new Blob([csv], { type: "text/csv" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "salesnav_leads.csv";
+    a.click();
+  }
+    
 </script>
 
 </body>
