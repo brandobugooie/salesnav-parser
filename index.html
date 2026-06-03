@@ -128,7 +128,10 @@
         }
       }
 
-      results.push({ name, connection, title, company, extras, location, lists, crmStatus, activity, date });
+      var nameParts = name.split(" ");
+var firstName = nameParts[0] || "";
+var lastName = nameParts.slice(1).join(" ") || "";
+results.push({ firstName, lastName, connection, title, company, extras, location, lists, crmStatus, activity, date });
     });
 
     // Store results globally for CSV download later
@@ -137,7 +140,7 @@
     document.getElementById("output").innerHTML = "<p>✅ Parsed <strong>" + results.length + " leads</strong> successfully!</p>";
 
     // Build table
-    var headers = ["Name","Connection","Title","Company","Extra Companies","Location","Lists","CRM Status","Activity","Last Activity Date"];
+    var headers = ["First Name","Last Name","Connection","Title","Company","Extra Companies","Location","Lists","CRM Status","Activity","Last Activity Date"];
     var html = "<table style='border-collapse:collapse; width:100%; font-size:13px;'>";
     html += "<tr>" + headers.map(function(h) {
       return "<th style='background:#0a66c2;color:white;padding:8px 12px;text-align:left;white-space:nowrap;'>" + h + "</th>";
@@ -159,7 +162,7 @@
   }
 function downloadCSV() {
     var headers = ["Name","Connection","Title","Company","Extra Companies","Location","Lists","CRM Status","Activity","Last Activity Date"];
-    var keys = ["name","connection","title","company","extras","location","lists","crmStatus","activity","date"];
+    var keys = ["firstName","lastName","connection","title","company","extras","location","lists","crmStatus","activity","date"];
     var csv = headers.join(",") + "\n";
     window.parsedLeads.forEach(function(r) {
       csv += keys.map(function(k) {
