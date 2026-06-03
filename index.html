@@ -52,10 +52,89 @@
   <div id="output"></div>
 
   <script>
-    function parseLeads() {
-      document.getElementById("output").innerHTML = "<p>It works! 🎉</p>";
+  function parseLeads() {
+    var raw = document.getElementById("rawInput").value;
+    var lines = raw.split("\n").map(function(l) { return l.trim(); });
+
+    // Split into per-lead blocks
+    var blocks = [];
+    var current = [];
+
+    for (var i = 0; i < lines.length; i++) {
+      if (lines[i].match(/^Select /i) && current.length > 0) {
+        blocks.push(current);
+        current = [];
+      }
+      current.push(lines[i]);
     }
-  </script>
+    if (current.length > 0) blocks.push(current);
+
+    // Parse each block
+    var results = [];
+
+    blocks.forEach(function(b) {
+      var name = b[1] || "";
+
+      var connection = "";
+      for (var i = 0; i < b.length; i++) {
+        if (b[i].match(/^(1st|2nd|3rd)$/i)) { connection = b[i]; break; }
+      }
+
+      var lists = "";
+      for (var i = 0; i < b.length; i++) {
+        if (b[i].match(/\d+\s+Lists?$/i)) { lists = b[i]; break; }
+      }
+
+      var crmStatus = "";
+      var crmIndex = -1;
+      for (var i = 0; i < b.length; i++) {
+        if (b[i].match(/CRM/i)) {
+          crmStatus = b[i];
+          crmIndex = i;
+          break;
+        }
+      }
+      if (crmIndex > 0 && b[crmIndex - 1] === "!") {
+        crmStatus = "! " + crmStatus;
+      }
+
+      var title = "", company = "", extras = "", location = "";
+      if (crmIndex !== -1) {
+        var afterCRM = [];
+        for (var i = crmIndex + 1; i < b.length; i++) {
+          if (b[i].match(/^Add note$/i)) break;
+          if (b[i] !== "") afterCRM.push(b[i]);
+        }
+        title   = (afterCRM[0] || "").replace(/^:\s*/, "");
+        company = afterCRM[1] || "";
+        if (afterCRM.length >= 3 && afterCRM[2].match(/^\(\+\d+\)$/)) {
+          extras   = afterCRM[2];
+          location = afterCRM[3] || "";
+        } else {
+          location = afterCRM[2] || "";
+        }
+      }
+
+      var activity = "", date = "";
+      for (var i = 0; i < b.length; i++) {
+        if (b[i].match(/^No activity$/i)) {
+          activity = b[i];
+          for (var j = i + 1; j < b.length; j++) {
+            if (b[j] !== "") { date = b[j]; break; }
+          }
+          break;
+        }
+      }
+
+      results.push({ name, connection, title, company, extras, location, lists, crmStatus, activity, date });
+    });
+
+    // Store results globally for CSV download later
+    window.parsedLeads = results;
+
+    document.getElementById("output").innerHTML = "<p>✅ Parsed <strong>" + results.length + " leads</strong> successfully! Table coming in Stage 3.</p>";
+  }
+</script>
 
 </body>
 </html>
