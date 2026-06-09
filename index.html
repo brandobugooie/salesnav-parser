@@ -154,7 +154,7 @@
 var firstName = nameParts[0] || "";
 var lastName = nameParts.slice(1).join(" ") || "";
 results.push({ firstName, lastName, connection, title, company, extras, location, lists, crmStatus, activity, date, leadSource: "Outbound Prospecting", repEmail: repEmail });
-
+    });
     // Store results globally for CSV download later
     window.parsedLeads = results;
 
