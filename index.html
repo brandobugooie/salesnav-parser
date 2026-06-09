@@ -116,7 +116,7 @@
   function parseLeads() {
     var raw = document.getElementById("rawInput").value;
     var repEmail = document.getElementById("repSelect").value;
-    var accountOverride = document.getElementById("accountNameOverride").value.trim();
+   
     if (!repEmail) {
       alert("Please select a rep before parsing!");
       return;
@@ -263,6 +263,7 @@ function downloadCSV() {
       if (rows.length < 2) { alert("CSV appears to be empty!"); return; }
 
       var headers = rows[0];
+      var accountOverride = document.getElementById("accountNameOverride").value.trim();
       var dataRows = rows.slice(1);
 
       // Column index finder
