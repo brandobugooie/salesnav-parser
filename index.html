@@ -100,7 +100,11 @@
     <option value="maria.hussion@nutrient.io">Maria Hussion</option>
   </select>
   <br>
-  <input type="file" id="csvFileInput" accept=".csv" style="margin-bottom:12px; font-size:14px;">
+  <label style="font-weight:bold; font-size:14px;">Override Company Name (optional):</label>
+<br>
+<input type="text" id="accountNameOverride" placeholder="e.g. Network Rail (leave blank to use CSV values)" style="margin-bottom:12px; margin-top:4px; padding:8px 12px; font-size:14px; border:1px solid #ccc; border-radius:6px; width:400px;">
+<br>
+<input type="file" id="csvFileInput" accept=".csv" style="margin-bottom:12px; font-size:14px;">
   <br>
   <button onclick="cleanCSV()" style="padding:10px 24px;background:#0a66c2;color:white;border:none;border-radius:6px;font-size:16px;cursor:pointer;">🧹 Clean CSV</button>
 
@@ -112,6 +116,7 @@
   function parseLeads() {
     var raw = document.getElementById("rawInput").value;
     var repEmail = document.getElementById("repSelect").value;
+    var accountOverride = document.getElementById("accountNameOverride").value.trim();
     if (!repEmail) {
       alert("Please select a rep before parsing!");
       return;
@@ -280,7 +285,7 @@ var iLinkedIn    = col("LinkedIn URL") !== -1 ? col("LinkedIn URL") : col("Linke
           firstName:    row[iFirstName]  || "",
           lastName:     row[iLastName]   || "",
           title:        row[iTitle]      || "",
-          company:      row[iCompany]    || "",
+          company:      accountOverride || row[iCompany] || "",
           email:        row[iEmail]      || "",
           altEmail:     row[iAltEmail]   || "",
           website:      row[iWebsite]    || "",
