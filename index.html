@@ -263,15 +263,15 @@ function downloadCSV() {
       // Column index finder
       function col(name) { return headers.findIndex(function(h) { return h.trim() === name; }); }
 
-      var iFirstName   = col("First Name");
-      var iLastName    = col("Last Name");
-      var iTitle       = col("Title");
-      var iCompany     = col("Company");
-      var iEmail       = col("Email (FullEnrich)");
-      var iAltEmail    = col("All Probably Valid Emails (FullEnrich)");
-      var iWebsite     = col("Website");
-      var iLeadSource  = col("LeadSource");
-      var iLinkedIn    = col("LinkedIn URL");
+      var iFirstName   = col("First Name") !== -1 ? col("First Name") : col("First Name (Linkedin)");
+var iLastName    = col("Last Name") !== -1 ? col("Last Name") : col("Last Name (Linkedin)");
+var iTitle       = col("Title") !== -1 ? col("Title") : col("Job Title (Linkedin)");
+var iCompany     = col("Company") !== -1 ? col("Company") : col("Company Name (Linkedin)");
+var iEmail       = col("Email (FullEnrich)");
+var iAltEmail    = col("All Probably Valid Emails (FullEnrich)");
+var iWebsite     = col("Website");
+var iLeadSource  = col("LeadSource");
+var iLinkedIn    = col("LinkedIn URL") !== -1 ? col("LinkedIn URL") : col("LinkedIn Profile Url");
 
       var results = [];
       dataRows.forEach(function(row) {
