@@ -42,6 +42,14 @@
 </head>
 <body>
 
+  <!-- Tab Buttons -->
+<div style="margin-bottom:24px;">
+  <button onclick="showTab('parser')" id="tab-parser" style="padding:10px 24px;background:#0a66c2;color:white;border:none;border-radius:6px 0 0 6px;font-size:15px;cursor:pointer;">📋 Sales Nav Parser</button>
+  <button onclick="showTab('cleaner')" id="tab-cleaner" style="padding:10px 24px;background:#ccc;color:#333;border:none;border-radius:0 6px 6px 0;font-size:15px;cursor:pointer;">🧹 Full Enrich Cleaner</button>
+</div>
+
+<!-- Tab 1: Sales Nav Parser -->
+<div id="tab-parser-content">
   <h1>Sales Nav Lead Parser</h1>
   <p>Paste your raw Sales Navigator copy below, then hit Parse.</p>
 
@@ -68,7 +76,38 @@
 <div id="output"></div>
 <div id="tableContainer" style="overflow-x:auto; margin-top:20px;"></div>
 <div id="downloadBtn" style="margin-top:10px;"></div>
+</div><!-- end tab-parser-content -->
 
+<!-- Tab 2: Full Enrich Cleaner -->
+<div id="tab-cleaner-content" style="display:none;">
+  <h1>Full Enrich CSV Cleaner</h1>
+  <p>Upload your Full Enrich CSV and we'll format it for Salesforce import.</p>
+
+  <label style="font-weight:bold; font-size:14px;">Assign to Rep:</label>
+  <br>
+  <select id="repSelectCleaner" style="margin-bottom:12px; margin-top:4px; padding:8px 12px; font-size:14px; border:1px solid #ccc; border-radius:6px; width:300px;">
+    <option value="">-- Select a Rep --</option>
+    <option value="katharina.tkatchenko@nutrient.io">Katharina Tkatchenko</option>
+    <option value="richard@nutrient.io">Richard Malloy</option>
+    <option value="ney.costa@nutrient.io">Ney Costa</option>
+    <option value="brandon.iturralde@nutrient.io">Brandon Iturralde</option>
+    <option value="huw.kimber@nutrient.io">Huw Kimber</option>
+    <option value="reinaldo.barreiros@nutrient.io">Reinaldo Barreiros</option>
+    <option value="harry.bradyturner@nutrient.io">Harry Brady-Turner</option>
+    <option value="alex.fal@nutrient.io">Alex Fal</option>
+    <option value="abeer.alaydi@nutrient.io">Abeer Alaydi</option>
+    <option value="caslin.lau@nutrient.io">Caslin Lau</option>
+    <option value="maria.hussion@nutrient.io">Maria Hussion</option>
+  </select>
+  <br>
+  <input type="file" id="csvFileInput" accept=".csv" style="margin-bottom:12px; font-size:14px;">
+  <br>
+  <button onclick="cleanCSV()" style="padding:10px 24px;background:#0a66c2;color:white;border:none;border-radius:6px;font-size:16px;cursor:pointer;">🧹 Clean CSV</button>
+
+  <div id="cleanerOutput" style="margin-top:20px;"></div>
+  <div id="cleanerTable" style="overflow-x:auto; margin-top:20px;"></div>
+  <div id="cleanerDownload" style="margin-top:10px;"></div>
+</div>
   <script>
   function parseLeads() {
     var raw = document.getElementById("rawInput").value;
@@ -196,7 +235,126 @@ function downloadCSV() {
     a.download = "salesnav_leads.csv";
     a.click();
   }
-    
+    function showTab(tab) {
+    document.getElementById('tab-parser-content').style.display = tab === 'parser' ? 'block' : 'none';
+    document.getElementById('tab-cleaner-content').style.display = tab === 'cleaner' ? 'block' : 'none';
+    document.getElementById('tab-parser').style.background = tab === 'parser' ? '#0a66c2' : '#ccc';
+    document.getElementById('tab-parser').style.color = tab === 'parser' ? 'white' : '#333';
+    document.getElementById('tab-cleaner').style.background = tab === 'cleaner' ? '#0a66c2' : '#ccc';
+    document.getElementById('tab-cleaner').style.color = tab === 'cleaner' ? 'white' : '#333';
+  }
+
+  function cleanCSV() {
+    var repEmail = document.getElementById("repSelectCleaner").value;
+    if (!repEmail) { alert("Please select a rep before cleaning!"); return; }
+
+    var file = document.getElementById("csvFileInput").files[0];
+    if (!file) { alert("Please upload a CSV file first!"); return; }
+
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var text = e.target.result;
+      var rows = parseCSVRows(text);
+      if (rows.length < 2) { alert("CSV appears to be empty!"); return; }
+
+      var headers = rows[0];
+      var dataRows = rows.slice(1);
+
+      // Column index finder
+      function col(name) { return headers.findIndex(function(h) { return h.trim() === name; }); }
+
+      var iFirstName   = col("First Name");
+      var iLastName    = col("Last Name");
+      var iTitle       = col("Title");
+      var iCompany     = col("Company");
+      var iEmail       = col("Email (FullEnrich)");
+      var iAltEmail    = col("All Probably Valid Emails (FullEnrich)");
+      var iWebsite     = col("Website");
+      var iLeadSource  = col("LeadSource");
+      var iLinkedIn    = col("LinkedIn URL");
+
+      var results = [];
+      dataRows.forEach(function(row) {
+        if (row.length < 2) return; // skip blank rows
+        results.push({
+          firstName:    row[iFirstName]  || "",
+          lastName:     row[iLastName]   || "",
+          title:        row[iTitle]      || "",
+          company:      row[iCompany]    || "",
+          email:        row[iEmail]      || "",
+          altEmail:     row[iAltEmail]   || "",
+          website:      row[iWebsite]    || "",
+          leadSource:   row[iLeadSource] || "Outbound Prospecting",
+          repEmail:     repEmail,
+          linkedIn:     row[iLinkedIn]   || ""
+        });
+      });
+
+      window.cleanedLeads = results;
+
+      document.getElementById("cleanerOutput").innerHTML = "<p>✅ Cleaned <strong>" + results.length + " leads</strong> successfully!</p>";
+
+      // Build table
+      var outHeaders = ["First Name","Last Name","Title","Company","Email","Alternate Email","Website","Lead Source","Lead Owner Email","LinkedIn URL"];
+      var keys = ["firstName","lastName","title","company","email","altEmail","website","leadSource","repEmail","linkedIn"];
+      var html = "<table style='border-collapse:collapse; width:100%; font-size:13px;'>";
+      html += "<tr>" + outHeaders.map(function(h) {
+        return "<th style='background:#0a66c2;color:white;padding:8px 12px;text-align:left;white-space:nowrap;'>" + h + "</th>";
+      }).join("") + "</tr>";
+      results.forEach(function(r, idx) {
+        var bg = idx % 2 === 0 ? "#ffffff" : "#f0f4ff";
+        html += "<tr style='background:" + bg + ";'>";
+        html += keys.map(function(k) {
+          return "<td style='padding:8px 12px;border-bottom:1px solid #ddd;white-space:nowrap;'>" + (r[k] || "") + "</td>";
+        }).join("");
+        html += "</tr>";
+      });
+      html += "</table>";
+      document.getElementById("cleanerTable").innerHTML = html;
+
+      document.getElementById("cleanerDownload").innerHTML = "<button onclick='downloadCleanedCSV()' style='padding:10px 24px;background:#00a36c;color:white;border:none;border-radius:6px;font-size:16px;cursor:pointer;'>⬇️ Download Cleaned CSV</button>";
+    };
+    reader.readAsText(file);
+  }
+
+  function parseCSVRows(text) {
+    var rows = [];
+    var row = [];
+    var cell = "";
+    var inQuotes = false;
+    for (var i = 0; i < text.length; i++) {
+      var c = text[i];
+      if (inQuotes) {
+        if (c === '"' && text[i+1] === '"') { cell += '"'; i++; }
+        else if (c === '"') { inQuotes = false; }
+        else { cell += c; }
+      } else {
+        if (c === '"') { inQuotes = true; }
+        else if (c === ',') { row.push(cell); cell = ""; }
+        else if (c === '\n') { row.push(cell); rows.push(row); row = []; cell = ""; }
+        else if (c === '\r') { /* skip */ }
+        else { cell += c; }
+      }
+    }
+    if (cell || row.length) { row.push(cell); rows.push(row); }
+    return rows;
+  }
+
+  function downloadCleanedCSV() {
+    var headers = ["First Name","Last Name","Title","Company","Email","Alternate Email","Website","Lead Source","Lead Owner Email","LinkedIn URL"];
+    var keys = ["firstName","lastName","title","company","email","altEmail","website","leadSource","repEmail","linkedIn"];
+    var csv = headers.join(",") + "\n";
+    window.cleanedLeads.forEach(function(r) {
+      csv += keys.map(function(k) {
+        return '"' + (r[k] || "").replace(/"/g, '""') + '"';
+      }).join(",") + "\n";
+    });
+    var blob = new Blob([csv], { type: "text/csv" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "salesforce_ready_leads.csv";
+    a.click();
+  }
 </script>
 
 </body>
