@@ -170,7 +170,7 @@ results.push({ firstName, lastName, connection, title, company, extras, location
     results.forEach(function(r, idx) {
       var bg = idx % 2 === 0 ? "#ffffff" : "#f0f4ff";
       html += "<tr style='background:" + bg + ";'>";
-     html += ["firstName","lastName","connection","title","company","extras","location","lists","crmStatus","activity","date","leadSource"].map(function(k) {
+     html += ["firstName","lastName","connection","title","company","extras","location","lists","crmStatus","activity","date","leadSource", "repEmail"].map(function(k) {
         return "<td style='padding:8px 12px;border-bottom:1px solid #ddd;white-space:nowrap;'>" + (r[k] || "") + "</td>";
       }).join("");
       html += "</tr>";
