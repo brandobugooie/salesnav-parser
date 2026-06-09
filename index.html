@@ -45,10 +45,26 @@
   <h1>Sales Nav Lead Parser</h1>
   <p>Paste your raw Sales Navigator copy below, then hit Parse.</p>
 
-  <textarea id="rawInput" placeholder="Paste Sales Nav data here..."></textarea>
-  <br>
-  <button onclick="parseLeads()">Parse Leads</button>
-
+  <label style="font-weight:bold; font-size:14px;">Assign to Rep:</label>
+<br>
+<select id="repSelect" style="margin-bottom:12px; margin-top:4px; padding:8px 12px; font-size:14px; border:1px solid #ccc; border-radius:6px; width:300px;">
+  <option value="">-- Select a Rep --</option>
+  <option value="katharina.tkatchenko@nutrient.io">Katharina Tkatchenko</option>
+  <option value="richard@nutrient.io">Richard Malloy</option>
+  <option value="ney.costa@nutrient.io">Ney Costa</option>
+  <option value="brandon.iturralde@nutrient.io">Brandon Iturralde</option>
+  <option value="huw.kimber@nutrient.io">Huw Kimber</option>
+  <option value="reinaldo.barreiros@nutrient.io">Reinaldo Barreiros</option>
+  <option value="harry.bradyturner@nutrient.io">Harry Brady-Turner</option>
+  <option value="alex.fal@nutrient.io">Alex Fal</option>
+  <option value="abeer.alaydi@nutrient.io">Abeer Alaydi</option>
+  <option value="caslin.lau@nutrient.io">Caslin Lau</option>
+  <option value="maria.hussion@nutrient.io">Maria Hussion</option>
+</select>
+<br>
+<textarea id="rawInput" placeholder="Paste Sales Nav data here..."></textarea>
+<br>
+<button onclick="parseLeads()">Parse Leads</button>
 <div id="output"></div>
 <div id="tableContainer" style="overflow-x:auto; margin-top:20px;"></div>
 <div id="downloadBtn" style="margin-top:10px;"></div>
@@ -56,6 +72,11 @@
   <script>
   function parseLeads() {
     var raw = document.getElementById("rawInput").value;
+    var repEmail = document.getElementById("repSelect").value;
+    if (!repEmail) {
+      alert("Please select a rep before parsing!");
+      return;
+    }
     var lines = raw.split("\n").map(function(l) { return l.trim(); });
 
     // Split into per-lead blocks
@@ -132,8 +153,7 @@
       var nameParts = name.split(" ");
 var firstName = nameParts[0] || "";
 var lastName = nameParts.slice(1).join(" ") || "";
-results.push({ firstName, lastName, connection, title, company, extras, location, lists, crmStatus, activity, date, leadSource: "Outbound Prospecting" });
-    });
+results.push({ firstName, lastName, connection, title, company, extras, location, lists, crmStatus, activity, date, leadSource: "Outbound Prospecting", repEmail: repEmail });
 
     // Store results globally for CSV download later
     window.parsedLeads = results;
@@ -141,7 +161,7 @@ results.push({ firstName, lastName, connection, title, company, extras, location
     document.getElementById("output").innerHTML = "<p>✅ Parsed <strong>" + results.length + " leads</strong> successfully!</p>";
 
     // Build table
-    var headers = ["First Name","Last Name","Connection","Title","Company","Extra Companies","Location","Lists","CRM Status","Activity","Last Activity Date","Lead Source"];
+    var headers = ["First Name","Last Name","Connection","Title","Company","Extra Companies","Location","Lists","CRM Status","Activity","Last Activity Date","LeadSource", "Lead Owner Email"];
     var html = "<table style='border-collapse:collapse; width:100%; font-size:13px;'>";
     html += "<tr>" + headers.map(function(h) {
       return "<th style='background:#0a66c2;color:white;padding:8px 12px;text-align:left;white-space:nowrap;'>" + h + "</th>";
@@ -162,8 +182,8 @@ results.push({ firstName, lastName, connection, title, company, extras, location
     document.getElementById("downloadBtn").innerHTML = "<button onclick='downloadCSV()' style='padding:10px 24px;background:#00a36c;color:white;border:none;border-radius:6px;font-size:16px;cursor:pointer;'>⬇️ Download CSV</button>";
   }
 function downloadCSV() {
-    var headers = ["First Name","Last Name","Connection","Title","Company","Extra Companies","Location","Lists","CRM Status","Activity","Last Activity Date","Lead Source"];
-    var keys = ["firstName","lastName","connection","title","company","extras","location","lists","crmStatus","activity","date","leadSource"];
+    var headers = ["First Name","Last Name","Connection","Title","Company","Extra Companies","Location","Lists","CRM Status","Activity","Last Activity Date","LeadSource", "Lead Owner Email"];
+    var keys = ["firstName","lastName","connection","title","company","extras","location","lists","crmStatus","activity","date","leadSource", "repEmail"];
     var csv = headers.join(",") + "\n";
     window.parsedLeads.forEach(function(r) {
       csv += keys.map(function(k) {
